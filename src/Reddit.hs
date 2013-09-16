@@ -1,11 +1,16 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Reddit where
 
+import Control.Monad.State
 import Network.HTTP
 import Text.JSON
 
 data RedditThingy = Comment | Account | Link | Message | Subreddit | Award | PromoCampaign
 
 data User = User {hasMail :: Bool, name :: String, isFriend :: Bool, created :: Double, modHash :: String, createdUTC :: Double, linkKarma :: Int, commentKarma :: Int, over18 :: Bool, isGold :: Bool, isMod :: Bool, hasVerifiedEmail :: Bool, id :: String, hasModMail :: Bool}
+
+newtype Reddit a = Reddit (StateT (User, String) IO a)
+                 deriving(Monad, MonadIO)
 
 instance Show RedditThingy where
   show Comment       = "t1"
