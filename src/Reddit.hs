@@ -4,6 +4,7 @@ module Reddit(Reddit, runReddit, RedditThingy(..), User(..)) where
 import Control.Exception
 import Control.Monad.State
 import Data.Map as M
+import Data.Tuple.Utils
 import Network.HTTP
 import Network.HTTP.Cookie
 import Text.DeadSimpleJSON
@@ -49,13 +50,16 @@ runReddit username password (Reddit m) = do
   evalStateT m (cookie, user, auth)
 
 meIO :: Cookie -> IO User
-me c = undefined
-
-oauth :: IO String
-oauth = undefined
+meIO c = undefined
 
   {- do
   let s = "http://www.reddit.com/api/me.json"
   rsp <- simpleHTTP (getRequest s) >>= getResponseBody
   return rsp
 -}
+
+oauth :: IO String
+oauth = undefined
+
+me :: Reddit User
+me = Reddit (get >>= return . snd3)
