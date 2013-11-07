@@ -3,6 +3,7 @@ module Reddit(Reddit, runReddit, RedditThingy(..), User(..)) where
 
 import Control.Exception
 import Control.Monad.State
+import Data.List
 import Data.Map as M
 import Data.Tuple.Utils
 import Network.HTTP
@@ -12,7 +13,20 @@ import Text.DeadSimpleJSON.Types
 
 data RedditThingy = Comment | Account | Link | Message | Subreddit | Award | PromoCampaign
 
-data User = User {hasMail :: Bool, name :: String, isFriend :: Bool, created :: Double, modHash :: String, createdUTC :: Double, linkKarma :: Int, commentKarma :: Int, over18 :: Bool, isGold :: Bool, isMod :: Bool, hasVerifiedEmail :: Bool, id :: String, hasModMail :: Bool}
+data User = User { hasMail          :: Bool,
+                   name             :: String,
+                   isFriend         :: Bool,
+                   created          :: Double,
+                   modHash          :: String,
+                   createdUTC       :: Double,
+                   linkKarma        :: Int,
+                   commentKarma     :: Int,
+                   over18           :: Bool,
+                   isGold           :: Bool,
+                   isMod            :: Bool,
+                   hasVerifiedEmail :: Bool,
+                   id               :: String,
+                   hasModMail       :: Bool }
 
 newtype Reddit a = Reddit (StateT (Cookie, User, String) IO a)
                  deriving(Monad, MonadIO)
@@ -26,9 +40,17 @@ instance Show RedditThingy where
   show Award         = "t6"
   show PromoCampaign = "t8"
 
+
+makeURL :: String -> [String] -> [String] -> String
+makeURL page params values =
+  "http://www.reddit.com/api/" ++ page ++ "?" ++ paramList
+  where
+    paramList = concat (intersperse "&" (zipWith (\x y -> x ++ "=" ++ y) params values))
+
+
 login :: String -> String -> IO (String, String)
 login username password = do
-  rsp <- simpleHTTP (postRequest $ "http://www.reddit.com/api/login?api_type=json&passwd=" ++ password ++ "&rem=false&user=" ++ username) >>= getResponseBody
+  rsp <- simpleHTTP (postRequest $ (makeURL "login" ["api_type", "passwd", "rem", "user"] ["json", password, "rem", username])) >>= getResponseBody
   case parse rsp of
     Right (JSON (Object prs)) ->
       case M.lookup "json" prs of
